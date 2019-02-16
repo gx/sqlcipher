@@ -270,9 +270,9 @@ SQLITE3H = sqlite3.h
 #
 !IFNDEF SQLITE3DLL
 !IF $(FOR_WIN10)!=0
-SQLITE3DLL = winsqlite3.dll
+SQLITE3DLL = winsqlcipher.dll
 !ELSE
-SQLITE3DLL = sqlite3.dll
+SQLITE3DLL = sqlcipher.dll
 !ENDIF
 !ENDIF
 
@@ -280,9 +280,9 @@ SQLITE3DLL = sqlite3.dll
 #
 !IFNDEF SQLITE3LIB
 !IF $(FOR_WIN10)!=0
-SQLITE3LIB = winsqlite3.lib
+SQLITE3LIB = winsqlcipher.lib
 !ELSE
-SQLITE3LIB = sqlite3.lib
+SQLITE3LIB = sqlcipher.lib
 !ENDIF
 !ENDIF
 
@@ -290,9 +290,9 @@ SQLITE3LIB = sqlite3.lib
 #
 !IFNDEF SQLITE3EXE
 !IF $(FOR_WIN10)!=0
-SQLITE3EXE = winsqlite3shell.exe
+SQLITE3EXE = winsqlciphershell.exe
 !ELSE
-SQLITE3EXE = sqlite3.exe
+SQLITE3EXE = sqlcipher.exe
 !ENDIF
 !ENDIF
 
@@ -303,7 +303,7 @@ SQLITE3EXE = sqlite3.exe
 !IF $(FOR_WIN10)!=0
 SQLITE3EXEPDB =
 !ELSE
-SQLITE3EXEPDB = /pdb:sqlite3sh.pdb
+SQLITE3EXEPDB = /pdb:sqlciphersh.pdb
 !ENDIF
 !ENDIF
 
@@ -593,7 +593,7 @@ CORE_COMPILE_OPTS = $(CORE_CCONV_OPTS)
 !IF $(DYNAMIC_SHELL)!=0
 CORE_LINK_DEP =
 !ELSEIF $(FOR_WIN10)==0 || "$(PLATFORM)"=="x86"
-CORE_LINK_DEP = sqlite3.def
+CORE_LINK_DEP = sqlcipher.def
 !ELSE
 CORE_LINK_DEP =
 !ENDIF
@@ -605,7 +605,7 @@ CORE_LINK_DEP =
 !IF $(DYNAMIC_SHELL)!=0
 CORE_LINK_OPTS =
 !ELSEIF $(FOR_WIN10)==0 || "$(PLATFORM)"=="x86"
-CORE_LINK_OPTS = /DEF:sqlite3.def
+CORE_LINK_OPTS = /DEF:sqlcipher.def
 !ELSE
 CORE_LINK_OPTS =
 !ENDIF
@@ -971,8 +971,16 @@ TLIBS =
 # default to file, 2 to default to memory, and 3 to force temporary
 # tables to always be in memory.
 #
-TCC = $(TCC) -DSQLITE_TEMP_STORE=1
-RCC = $(RCC) -DSQLITE_TEMP_STORE=1
+TCC = $(TCC) -DSQLITE_TEMP_STORE=2
+RCC = $(RCC) -DSQLITE_TEMP_STORE=2
+
+# Add -DSQLITE_HAS_CODEC to TCC and RCC
+TCC = $(TCC) -DSQLITE_HAS_CODEC
+RCC = $(RCC) -DSQLITE_HAS_CODEC
+
+# Add OpenSSL include path to TCC and RCC
+TCC = $(TCC) -I"C:\Program Files\OpenSSL-Win64\include"
+RCC = $(RCC) -I"C:\Program Files\OpenSSL-Win64\include"
 
 # Enable/disable loadable extensions, and other optional features
 # based on configuration. (-DSQLITE_OMIT*, -DSQLITE_ENABLE*).
@@ -1171,6 +1179,10 @@ LDFLAGS = $(LDOPTS)
 TCLLIBPATHS = $(TCLLIBPATHS) /LIBPATH:$(TCLLIBDIR)
 TCLLIBS = $(TCLLIBS) $(LIBTCL)
 !ENDIF
+
+# Add OpenSSL library path and library file names.
+LTLIBPATHS = $(LTLIBPATHS) /LIBPATH:"C:\Program Files\OpenSSL-Win64\lib"
+LTLIBS = $(LTLIBS) libcrypto.lib
 
 # If zlib support is enabled, add the linker options for it.
 #
@@ -1703,11 +1715,11 @@ $(SQLITE3DLL):	$(LIBOBJ) $(LIBRESOBJS) $(CORE_LINK_DEP)
 	$(LD) $(LDFLAGS) $(LTLINKOPTS) $(LTLIBPATHS) /DLL $(CORE_LINK_OPTS) /OUT:$@ $(LIBOBJ) $(LIBRESOBJS) $(LTLIBS) $(TLIBS)
 
 # <<block2>>
-sqlite3.def:	libsqlite3.lib
-	echo EXPORTS > sqlite3.def
+sqlcipher.def:	libsqlite3.lib
+	echo EXPORTS > sqlcipher.def
 	dumpbin /all libsqlite3.lib \
 		| $(TCLSH_CMD) $(TOP)\tool\replace.tcl include "^\s+1 _?(sqlite3(?:session|changeset|changegroup|rebaser)?_[^@]*)(?:@\d+)?$$" \1 \
-		| sort >> sqlite3.def
+		| sort >> sqlcipher.def
 # <</block2>>
 
 $(SQLITE3EXE):	shell.c $(SHELL_CORE_DEP) $(LIBRESOBJS) $(SHELL_CORE_SRC) $(SQLITE3H)
