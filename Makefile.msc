@@ -159,7 +159,7 @@ USE_NATIVE_LIBPATHS = 0
 # Set this 0 to skip the compiling and embedding of version resources.
 #
 !IFNDEF USE_RC
-USE_RC = 1
+USE_RC = 0
 !ENDIF
 
 # Set this non-0 to compile binaries suitable for the WinRT environment.
